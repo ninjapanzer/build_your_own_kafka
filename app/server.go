@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 	"log"
 	"net"
@@ -25,17 +26,20 @@ func main() {
 		fmt.Println("Error accepting connection: ", err.Error())
 		os.Exit(1)
 	}
-	b := make([]byte, 4)
+	defer c.Close()
+	b := make([]byte, 1024)
 	_, err = c.Read(b)
 	if err != nil {
 		log.Fatal("Failed to Read from Connection: ", err.Error())
 	}
-	_, err = c.Write(b)
+
+	r := [4]byte{0, 0, 0, 7}
+	s := make([]byte, 4)
+	binary.BigEndian.PutUint32(s, uint32(len(b)))
+	r2 := append(s[:], r[:]...)
+	fmt.Println(r2)
+	_, err = c.Write(r2)
 	if err != nil {
 		log.Fatal("Failed to Write to Connection: ", err.Error())
-	}
-	err = c.Close()
-	if err != nil {
-		log.Fatal("closed ", err.Error())
 	}
 }
